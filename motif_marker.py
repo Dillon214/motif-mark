@@ -49,16 +49,30 @@ class seq:
         self.name = name
         self.seq = sequence
         self.associated_motifs = {}
-    
-    def find_motif_occurences(self, motif_object_name, motif_search_seq):
-        p = re.compile(motif_search_seq)
-        for m in p.finditer((self.seq).upper()):
-            print(m.start(), m.group())
-        
-        
-        
         
 
+    def find_motif_occurences(self, motif_object_name, motif_search_seq):
+        p = re.compile(motif_search_seq)
+        self.associated_motifs[motif_object_name] = tuple((m.start(), m.end()) for m in p.finditer((self.seq).upper()))
+        
+
+class cairo_image:
+    def __init__(self, name):
+        self.name = name
+    
+    def draw_objects(self, seq_objects):
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 200, 200*len(seq_objects) + 50)
+        ctx = cairo.Context(surface)
+        
+        for i, seq_obj in enumerate(seq_objects):
+            ctx.set_line_width(2)
+            ctx.move_to(20,200*i + 20)
+            ctx.line_to(130,200*i + 20)
+            ctx.stroke()
+        surface.write_to_png("fest.png")
+
+             
+        
 
 class motif:
     def __init__(self, motif):
@@ -84,11 +98,17 @@ for line in seq_lines:
     making_lineseq += line.strip()
 lineseqs.append(making_lineseq)
 
+
+
+
+
+
 seq_objects = [seq(linenames[num], lineseqs[num]) for num in range(linecounter)]
 
 motif_objects = [motif(line.strip()) for line in motif_lines]
 
-print(motif_objects[1].motif)
-seq_objects[2].find_motif_occurences(motif_objects[1].motif, motif_objects[1].searchpattern)
 
+seq_objects[2].find_motif_occurences(motif_objects[0].motif, motif_objects[0].searchpattern)
 
+cairo_obj = cairo_image("booba")
+cairo_obj.draw_objects(seq_objects)
