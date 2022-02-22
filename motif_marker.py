@@ -16,7 +16,7 @@ motif = args.m
 fasta_file = open(fasta, "r")
 motif_file = open(motif, "r")
 
-
+print("running")
 seq_lines = fasta_file.readlines()
 motif_lines = motif_file.readlines()
 
@@ -49,6 +49,9 @@ class seq:
         self.name = name
         self.seq = sequence
         self.associated_motifs = {}
+        self.exon_locs = re.compile("[A-Z]").finditer((self.seq).upper())
+        
+        
         
 
     def find_motif_occurences(self, motif_object_name, motif_search_seq):
@@ -61,15 +64,16 @@ class cairo_image:
         self.name = name
     
     def draw_objects(self, seq_objects):
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 200, 200*len(seq_objects) + 50)
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, max((len(x.seq) for x in seq_objects)), 200*len(seq_objects) + 50)
         ctx = cairo.Context(surface)
         
         for i, seq_obj in enumerate(seq_objects):
+            print(len(seq_obj.seq))
             ctx.set_line_width(2)
             ctx.move_to(20,200*i + 20)
-            ctx.line_to(130,200*i + 20)
+            ctx.line_to(20 + len(seq_obj.seq),200*i + 20)
             ctx.stroke()
-        surface.write_to_png("fest.png")
+        surface.write_to_png("festi.png")
 
              
         
