@@ -1,7 +1,7 @@
 import re
 import cairo
 import argparse
-
+import random
 
 parser = argparse.ArgumentParser(description='Import motifs and fasta.')
 parser.add_argument('-m', help='motifs')
@@ -50,9 +50,6 @@ class seq:
         self.seq = sequence
         self.associated_motifs = {}
         self.exon_locs = re.compile("[A-Z]").finditer((self.seq).upper())
-        
-        
-        
 
     def find_motif_occurences(self, motif_object_name, motif_search_seq):
         p = re.compile(motif_search_seq)
@@ -64,15 +61,37 @@ class cairo_image:
         self.name = name
     
     def draw_objects(self, seq_objects):
+        
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, max((len(x.seq) for x in seq_objects)), 200*len(seq_objects) + 50)
         ctx = cairo.Context(surface)
         
+        
         for i, seq_obj in enumerate(seq_objects):
+            global_shift = 60
             print(len(seq_obj.seq))
             ctx.set_line_width(2)
-            ctx.move_to(20,200*i + 20)
-            ctx.line_to(20 + len(seq_obj.seq),200*i + 20)
+            ctx.move_to(20,200*i + global_shift)
+            ctx.line_to(20 + len(seq_obj.seq),200*i + global_shift)
+
+
+            num_motifs = len(seq_obj.associated_motifs)
+            random_colors = ((random.randint(0,255), random.randint(0,255), random.randint(0,255)) for y in num_motifs)
+            top_bound = 200*i + global_shift - 50
+            length = 100/(num_motifs + 0.01)
+
+            for motifnum, x in enumerate(seq_obj.associated_motifs):
+                
+                vert = top_bound + length*motifnum
+
+
+                motif_positions = seq_obj.associated_motifs[x]
+
+                for z in motif_positions:
+                    
+                    ctx.rectangle(z[0], vert, z[1] - z[0], length)
+
             ctx.stroke()
+        
         surface.write_to_png("festi.png")
 
              
