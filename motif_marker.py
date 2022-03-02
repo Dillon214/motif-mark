@@ -59,6 +59,7 @@ class seq:
 class cairo_image:
     def __init__(self, name):
         self.name = name
+        self.motif_colors = {}
     
     def draw_objects(self, seq_objects):
         
@@ -72,15 +73,22 @@ class cairo_image:
             ctx.set_line_width(2)
             ctx.move_to(20,200*i + global_shift)
             ctx.line_to(20 + len(seq_obj.seq),200*i + global_shift)
-
+            ctx.stroke()
 
             num_motifs = len(seq_obj.associated_motifs)
-            random_colors = ((random.randint(0,255), random.randint(0,255), random.randint(0,255)) for y in num_motifs)
+            
             top_bound = 200*i + global_shift - 50
             length = 100/(num_motifs + 0.01)
 
             for motifnum, x in enumerate(seq_obj.associated_motifs):
                 
+                if x not in self.motif_colors:
+                    print(x)
+                    self.motif_colors[x] = (random.random(), random.random(), random.random())
+                color = self.motif_colors[x]
+
+                ctx.set_source_rgb(color[0], color[1], color[2])
+                #ctx.set_source_rgb(0.6, 0.6, 0.6)
                 vert = top_bound + length*motifnum
 
 
@@ -89,6 +97,10 @@ class cairo_image:
                 for z in motif_positions:
                     
                     ctx.rectangle(z[0], vert, z[1] - z[0], length)
+                ctx.fill()
+                ctx.stroke()
+                
+                ctx.set_source_rgb(0,0,0)
 
             ctx.stroke()
         
