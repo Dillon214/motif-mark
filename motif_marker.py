@@ -21,22 +21,22 @@ seq_lines = fasta_file.readlines()
 motif_lines = motif_file.readlines()
 
 degendict = {
-    "W":"[A,T]",
+    "W":"[A,T,U]",
     "S":"[C,G]",
     "M":"[A,C]",
-    "K":"[G,T]",
+    "K":"[G,T,U]",
     "P":"[A,G]",
-    "Y":"[C,T]",
-    "B":"[G,C,T]",
-    "D":"[A,G,T]",
-    "H":"[A,C,T]",
+    "Y":"[C,T,U]",
+    "B":"[G,C,T,U]",
+    "D":"[A,G,T,U]",
+    "H":"[A,C,T,U]",
     "V":"[A,G,C]",
-    "N":"[A,G,C,T]",
+    "N":"[A,G,C,T,U]",
     "A":"A",
     "C":"C",
-    "T":"T",
+    "T":"[T,U]",
     "G":"G",
-    "U":"U"
+    "U":"[U,T]"
 }
 
 def translatedegenerate(string):
@@ -62,28 +62,38 @@ class cairo_image:
         self.motif_colors = {}
     
     def draw_objects(self, seq_objects):
+        global_yshift = 100
+        global_xshift = 20
         
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, max((len(x.seq) for x in seq_objects)), 200*len(seq_objects) + 50)
+        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, max((len(x.seq) for x in seq_objects)) + 300, 200*len(seq_objects))
         ctx = cairo.Context(surface)
         
         
         for i, seq_obj in enumerate(seq_objects):
-            global_shift = 60
-            print(len(seq_obj.seq))
+            ctx.set_source_rgb(0.8,0.8,0.8)
+            
             ctx.set_line_width(2)
-            ctx.move_to(20,200*i + global_shift)
-            ctx.line_to(20 + len(seq_obj.seq),200*i + global_shift)
+            ctx.move_to(global_xshift,200*i + global_yshift)
+            ctx.line_to(global_xshift + len(seq_obj.seq),200*i + global_yshift)
+            ctx.move_to(global_xshift,200*i + global_yshift - 58)
+            ctx.select_font_face("Purisa", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+            ctx.set_font_size(14)
+            
+            ctx.show_text(seq_obj.name)
             ctx.stroke()
+
+            
+            
+            
 
             num_motifs = len(seq_obj.associated_motifs)
             
-            top_bound = 200*i + global_shift - 50
+            top_bound = 200*i + global_yshift - 50
             length = 100/(num_motifs + 0.01)
 
             for motifnum, x in enumerate(seq_obj.associated_motifs):
                 
                 if x not in self.motif_colors:
-                    print(x)
                     self.motif_colors[x] = (random.random(), random.random(), random.random())
                 color = self.motif_colors[x]
 
@@ -96,10 +106,19 @@ class cairo_image:
 
                 for z in motif_positions:
                     
-                    ctx.rectangle(z[0], vert, z[1] - z[0], length)
+                    ctx.rectangle(z[0] + global_xshift, vert, z[1] - z[0], length)
+                print(x)
+                print(len(motif_positions))
                 ctx.fill()
                 ctx.stroke()
-                
+
+                ctx.set_source_rgb(color[0], color[1], color[2])
+        
+                ctx.select_font_face("Purisa", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+                ctx.set_font_size(13)
+                ctx.move_to(30 + len(seq_obj.seq), vert + 15)
+                ctx.show_text(x)
+
                 ctx.set_source_rgb(0,0,0)
 
             ctx.stroke()
@@ -112,7 +131,9 @@ class cairo_image:
 class motif:
     def __init__(self, motif):
         self.motif = motif
+        
         self.searchpattern = translatedegenerate(self.motif.upper())
+        print(self.searchpattern.lower())
     
         
 
@@ -135,7 +156,7 @@ lineseqs.append(making_lineseq)
 
 
 
-
+print(lineseqs)
 
 
 seq_objects = [seq(linenames[num], lineseqs[num]) for num in range(linecounter)]
@@ -143,7 +164,14 @@ seq_objects = [seq(linenames[num], lineseqs[num]) for num in range(linecounter)]
 motif_objects = [motif(line.strip()) for line in motif_lines]
 
 
-seq_objects[2].find_motif_occurences(motif_objects[0].motif, motif_objects[0].searchpattern)
+
+
+
+for seq_ob in seq_objects:
+    for moti in motif_objects:
+        seq_ob.find_motif_occurences(moti.motif, moti.searchpattern)
+
 
 cairo_obj = cairo_image("booba")
 cairo_obj.draw_objects(seq_objects)
+
