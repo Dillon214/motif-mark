@@ -52,8 +52,16 @@ class seq:
         self.exon_locs = re.compile("[A-Z]").finditer((self.seq).upper())
 
     def find_motif_occurences(self, motif_object_name, motif_search_seq):
-        p = re.compile(motif_search_seq)
-        self.associated_motifs[motif_object_name] = tuple((m.start(), m.end()) for m in p.finditer((self.seq).upper()))
+        pattern = motif_search_seq
+        
+        
+        #self.associated_motifs[motif_object_name] = tuple(m.start(), m.end()) for m in re.finditer(r'(?=(' + pattern + '))' ,(self.seq).upper()))
+        iterable = re.finditer(r'(?=(' + pattern + '))' ,(self.seq).upper())
+        self.associated_motifs[motif_object_name] = [(m.start(), m.start()+ len(motif_object_name)) for m in iterable]
+        
+            
+        
+
         
 
 class cairo_image:
@@ -103,14 +111,45 @@ class cairo_image:
 
 
                 motif_positions = seq_obj.associated_motifs[x]
+                
+                overlap = 1
+                overlapstart = None
+                for i, z in enumerate(motif_positions):
+                    
+                    if i > 0:
+                        if z[0] < motif_positions[i - 1][1]:
+                            overlap += 1
+                        else:
+                            if overlap > 1:
+                                ctx.set_source_rgb(color[0], color[1], color[2])
+                                ctx.select_font_face("Purisa", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+                                ctx.set_font_size(13)
+                                ctx.move_to(overlapstart + global_xshift, vert)
+                                ctx.show_text("overlap")
+                                ctx.stroke()
+                                overlap = 1
+                            overlapstart = z[0]
+                    else:
+                        overlapstart = z[0]
 
+                
+
+                    ctx.rectangle(z[0] + global_xshift, vert, z[1] - z[0], length)
+                    ctx.fill()
+                    ctx.stroke()
+                
+                #ctx.fill()
+                #ctx.stroke()
+                
+
+                ctx.set_source_rgb(1,1,1)
                 for z in motif_positions:
                     
-                    ctx.rectangle(z[0] + global_xshift, vert, z[1] - z[0], length)
-                print(x)
-                print(len(motif_positions))
+                    ctx.rectangle(z[0] + global_xshift, vert, 0.7, length)
+
                 ctx.fill()
                 ctx.stroke()
+
 
                 ctx.set_source_rgb(color[0], color[1], color[2])
         
@@ -133,7 +172,7 @@ class motif:
         self.motif = motif
         
         self.searchpattern = translatedegenerate(self.motif.upper())
-        print(self.searchpattern.lower())
+        
     
         
 
@@ -156,7 +195,7 @@ lineseqs.append(making_lineseq)
 
 
 
-print(lineseqs)
+
 
 
 seq_objects = [seq(linenames[num], lineseqs[num]) for num in range(linecounter)]
