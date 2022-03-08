@@ -17,6 +17,8 @@ fasta_file = open(fasta, "r")
 motif_file = open(motif, "r")
 
 print("running")
+
+random.seed(1000)
 seq_lines = fasta_file.readlines()
 motif_lines = motif_file.readlines()
 
@@ -49,7 +51,7 @@ class seq:
         self.name = name
         self.seq = sequence
         self.associated_motifs = {}
-        self.exon_locs = re.compile("[A-Z]").finditer((self.seq).upper())
+        self.exon_locs = [(m.start(), m.end()) for m in re.compile("[A-Z]+").finditer((self.seq))]
 
     def find_motif_occurences(self, motif_object_name, motif_search_seq):
         pattern = motif_search_seq
@@ -90,7 +92,17 @@ class cairo_image:
             ctx.show_text(seq_obj.name)
             ctx.stroke()
 
-            
+            for x in seq_obj.exon_locs:
+                print(x)
+                ctx.rectangle(x[0] + global_xshift - 2, 200*i + global_yshift - 52, x[1] - x[0] + 4, 104)
+                ctx.set_source_rgb(1,1,1)
+                ctx.fill()
+                ctx.stroke()
+                ctx.rectangle(x[0] + global_xshift, 200*i + global_yshift - 50, x[1] - x[0], 100)
+                ctx.set_source_rgb(0,0,0)
+                ctx.fill()
+                ctx.stroke()
+
             
             
 
@@ -98,6 +110,8 @@ class cairo_image:
             
             top_bound = 200*i + global_yshift - 50
             length = 100/(num_motifs + 0.01)
+            size_for_multi = 0.25 * length
+            
 
             for motifnum, x in enumerate(seq_obj.associated_motifs):
                 
@@ -123,32 +137,36 @@ class cairo_image:
                             if overlap > 1:
                                 ctx.set_source_rgb(color[0], color[1], color[2])
                                 ctx.select_font_face("Purisa", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-                                ctx.set_font_size(13)
-                                ctx.move_to(overlapstart + global_xshift, vert)
-                                ctx.show_text("overlap")
+                                ctx.set_font_size(1.3 * (size_for_multi))
+                                ctx.move_to(overlapstart + global_xshift, vert + length * 0.9)
+                                ctx.show_text("x" + str(overlap))
                                 ctx.stroke()
                                 overlap = 1
                             overlapstart = z[0]
+
                     else:
                         overlapstart = z[0]
 
                 
 
-                    ctx.rectangle(z[0] + global_xshift, vert, z[1] - z[0], length)
+                    ctx.rectangle(z[0] + global_xshift, vert, z[1] - z[0], length * 0.5)
                     ctx.fill()
                     ctx.stroke()
+
+                if overlap > 1:
+                    ctx.set_source_rgb(color[0], color[1], color[2])
+                    ctx.select_font_face("Purisa", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+                    ctx.set_font_size(1.3 * (size_for_multi))
+                    ctx.move_to(overlapstart + global_xshift, vert + length * 0.9)
+                    ctx.show_text("x" + str(overlap))
+                    ctx.stroke()
+                
                 
                 #ctx.fill()
                 #ctx.stroke()
                 
 
-                ctx.set_source_rgb(1,1,1)
-                for z in motif_positions:
-                    
-                    ctx.rectangle(z[0] + global_xshift, vert, 0.7, length)
-
-                ctx.fill()
-                ctx.stroke()
+                
 
 
                 ctx.set_source_rgb(color[0], color[1], color[2])
@@ -156,13 +174,13 @@ class cairo_image:
                 ctx.select_font_face("Purisa", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
                 ctx.set_font_size(13)
                 ctx.move_to(30 + len(seq_obj.seq), vert + 15)
-                ctx.show_text(x)
+                ctx.show_text(x + "  " + str(len(motif_positions)) + " occurances")
 
                 ctx.set_source_rgb(0,0,0)
 
             ctx.stroke()
         
-        surface.write_to_png("festi.png")
+        surface.write_to_png(fasta.split(".")[0] + ".png")
 
              
         
@@ -211,6 +229,6 @@ for seq_ob in seq_objects:
         seq_ob.find_motif_occurences(moti.motif, moti.searchpattern)
 
 
-cairo_obj = cairo_image("booba")
+cairo_obj = cairo_image("figure_1")
 cairo_obj.draw_objects(seq_objects)
 
